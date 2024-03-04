@@ -1,6 +1,4 @@
-var argscheck = require('cordova/argscheck'),
-  utils = require('cordova/utils'),
-  exec = require('cordova/exec');
+var exec = require('cordova/exec');
 
 var PLUGIN_NAME = 'IonicDeeplinkPlugin';
 
@@ -41,7 +39,7 @@ var IonicDeeplink = {
     this.onDeepLink(function (data) {
       var realPath = self._getRealPath(data);
 
-      var args = self._queryToObject(data.queryString);
+      var args = self._queryToObject(data.url);
 
       var matched = false;
       var finalArgs;
@@ -79,41 +77,6 @@ var IonicDeeplink = {
         error({ $link: data });
       }
     })
-  },
-
-  routeWithNavController: function (navController, paths, options, success, error) {
-    var self = this;
-
-    var defaultOptions = {
-      root: false,
-    };
-
-    if (typeof options !== 'function') {
-      options = extend(defaultOptions, options);
-    } else {
-      success = options;
-      error = success;
-      options = defaultOptions;
-    }
-
-    this.route(paths, function (match) {
-      // Defer this to ensure animations run
-      setTimeout(function () {
-        if (options.root === true) {
-          navController.setRoot(match.$route, match.$args);
-        } else {
-          navController.push(match.$route, match.$args);
-        }
-      }, self.NAVIGATION_DELAY);
-
-      if (typeof (success) === 'function') {
-        success(match);
-      }
-    }, function (nomatch) {
-      if (typeof (error) === 'function') {
-        error(nomatch);
-      }
-    });
   },
 
   /**
@@ -182,11 +145,11 @@ var IonicDeeplink = {
     return retObj;
   },
 
-  _stripFragmentLeadingHash: function (fragment) {
-    var hs = fragment.indexOf('#');
+  _stripQueryString: function (fragment) {
+    var hs = fragment.indexOf('?');
 
     if (hs > -1) {
-      fragment.slice(0, hs);
+      fragment = fragment.slice(0, hs);
     }
 
     return fragment;
@@ -202,7 +165,7 @@ var IonicDeeplink = {
   _getRealPath: function (data) {
 
     // 1. Let's just do the obvious and return the parsed 'path' first, if available.
-    if (!!data.path && data.path !== "") {
+    if (!!data.path && data.path !== "" && !data.fragment) {
       return data.path;
     }
 
@@ -212,7 +175,7 @@ var IonicDeeplink = {
     // 3. Nope so we'll go fragment first if available as that should be what comes after
     if (!isCustomScheme) {
       if (!!data.fragment) {
-        return this._stripFragmentLeadingHash(data.fragment);
+        return this._stripQueryString(data.fragment);
       }
     }
 
@@ -227,7 +190,7 @@ var IonicDeeplink = {
 
     // 5. We'll use fragment next if we're in a custom scheme, though this might need a little more thought
     if (isCustomScheme && !!data.fragment) {
-      return this._stripFragmentLeadingHash(data.fragment);
+      return this._stripQueryString(data.fragment);
     }
 
     // 6. Last resort - no obvious path, fragment or host, so we
@@ -264,9 +227,6 @@ var IonicDeeplink = {
     exec(innerCB, null, PLUGIN_NAME, 'onDeepLink', []);
   },
 
-  getHardwareInfo: function (callback) {
-    exec(callback, null, PLUGIN_NAME, 'getHardwareInfo', []);
-  },
 };
 
 module.exports = IonicDeeplink;

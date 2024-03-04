@@ -37,7 +37,7 @@
 
 - (BOOL)handleLink:(NSURL *)url {
   NSLog(@"IonicDeepLinkPlugin: Handle link (internal) %@", url);
-  
+
   if(![self checkUrl:url]) {
     return NO;
   }
@@ -51,27 +51,27 @@
 
 - (BOOL)checkUrl:(NSURL *)url {
   if(url == nil) return NO;
-    
+
   NSString* urlScheme = [[self.commandDelegate settings] objectForKey:@"url_scheme"];
-    
+
   if(urlScheme == nil) return NO;
-    
+
   NSLog(@"url scheme:%@",[url scheme]);
   NSLog(@"url host:%@",[url host]);
 
   if([[url scheme] isEqualToString:urlScheme]) {
     return YES;
   }
-    
+
   NSString* deeplinkScheme = [[self.commandDelegate settings] objectForKey:@"deeplink_scheme"];
   NSString* deeplinkHost = [[self.commandDelegate settings] objectForKey:@"deeplink_host"];
-    
+
   if(deeplinkScheme!=nil && deeplinkHost != nil) {
     if([[url scheme] isEqualToString:deeplinkScheme]&&[[url host] isEqualToString:deeplinkHost]) {
       return YES;
     }
   }
-  
+
   return NO;
 }
 
@@ -118,22 +118,6 @@
   CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:data];
   [result setKeepCallbackAsBool:YES];
   return result;
-}
-
-- (void)getHardwareInfo:(CDVInvokedUrlCommand *)command {
-  NSMutableDictionary *info = [[NSMutableDictionary alloc] init];
-
-
-  // Removing part where advertisingIdentifier is being used to keep the functional part working.
-
-  NSString *uuid = [[UIDevice currentDevice].identifierForVendor UUIDString];
-
-  if(uuid && [uuid length] > 0) {
-    [info setObject:uuid forKey:@"uuid"];
-  }
-
-  CDVPluginResult *result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:info];
-  [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
 }
 
 @end
